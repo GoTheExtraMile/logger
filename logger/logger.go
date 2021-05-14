@@ -19,10 +19,10 @@ func init() {
 		lvl = "info"
 	}
 
-	InitLog(setLogFile(info), setLogFile(err), lvl)
+	InitLog(setLogFile(info), setLogFile(err), lvl, false)
 }
 
-func InitLog(logPath, errPath string, level string) {
+func InitLog(logPath, errPath string, level string, enable bool) {
 	config := zapcore.EncoderConfig{
 		MessageKey:  "msg",
 		LevelKey:    "level",
@@ -80,12 +80,14 @@ func InitLog(logPath, errPath string, level string) {
 	logger = log.Sugar()
 	logger.Sync()
 
-	http.HandleFunc("/app/level", atomicLevel.ServeHTTP) //动态修改日志api
-	go func() {
-		if err := http.ListenAndServe(":9090", nil); err != nil {
-			panic(err)
-		}
-	}()
+	if enable {
+		http.HandleFunc("/app/level", atomicLevel.ServeHTTP) //动态修改日志api
+		go func() {
+			if err := http.ListenAndServe(":9090", nil); err != nil {
+				panic(err)
+			}
+		}()
+	}
 }
 
 func getLogWriter(filename string) zapcore.WriteSyncer {
